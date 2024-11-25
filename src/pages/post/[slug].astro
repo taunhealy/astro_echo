@@ -1,0 +1,50 @@
+---
+import type { InferGetStaticParamsType } from "astro";
+import { PortableText } from "astro-portabletext";
+import Layout from "../../layouts/Layout.astro";
+import { formatDate } from "../../utils";
+import { urlFor } from "../../utils/image";
+import { getPost, getPosts } from "../../utils/sanity";
+
+export async function getStaticPaths() {
+  const posts = await getPosts();
+  return posts.map((post) => ({
+    params: { slug: post.slug.current },
+  }));
+}
+
+type Params = InferGetStaticParamsType<typeof getStaticPaths>;
+const { slug } = Astro.params as Params;
+
+const post = await getPost(slug);
+---
+
+<Layout title={post.title!}>
+  <section class="w-full my-4 md:my-16">
+    {
+      post.mainImage ? (
+        <img
+          class="w-full h-48 object-cover"
+          src={urlFor(post.mainImage).url()}
+          alt="Cover image"
+        />
+      ) : (
+        <div class="w-full h-48 bg-black" />
+      )
+    }
+    <div class="px-6 md:px-12">
+      <h1 class="font-sans text-5xl md:text-7xl font-extrabold leading-tight mt-6 md:mt-12 tracking-tighter">
+        {post.title}
+      </h1>
+      <p class="font-serif text-xl md:text-2xl font-normal mt-4">
+        {post.excerpt}
+      </p>
+      <p class="font-sans font-semibold text-sm md:text-lg mt-4">
+        {formatDate(post._createdAt)}
+      </p>
+      <div class="mt-12 md:mt-16">
+        <PortableText value={post.body} />
+      </div>
+    </div>
+  </section>
+</Layout>
